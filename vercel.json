@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "functions": {
+    "api/sms.js": {
+      "maxDuration": 10
+    },
+    "api/imessage.js": {
+      "maxDuration": 10
+    }
+  },
+  "env": {
+    "TWILIO_ACCOUNT_SID": "@twilio_account_sid",
+    "TWILIO_AUTH_TOKEN": "@twilio_auth_token",
+    "OPENAI_API_KEY": "@openai_api_key",
+    "ENCRYPTION_KEY": "@encryption_key"
+  }
+}

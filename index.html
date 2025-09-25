@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS AI Assistant - If You Can Text, You Can Get Answers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .hero .tagline {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .hero .subtitle {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .phone-demo {
+            text-align: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .phone-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 1rem;
+        }
+
+        .examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .example {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .example strong {
+            color: #007bff;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature h3 {
+            color: #007bff;
+            margin-bottom: 0.5rem;
+        }
+
+        .cta {
+            text-align: center;
+            margin: 3rem 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 0.5rem;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .phone-number {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="hero">
+            <h1>SMS AI Assistant</h1>
+            <div class="tagline">If You Can Text, You Can Get Answers</div>
+            <div class="subtitle">No Apps • No Logins • Just Text a Question</div>
+        </header>
+
+        <div class="card">
+            <div class="phone-demo">
+                <div class="phone-number">📱 Text: (Coming Soon)</div>
+                <p>Simple as texting a friend - get instant AI help via SMS</p>
+            </div>
+
+            <div class="examples">
+                <div class="example">
+                    <strong>You:</strong> "Weather today?"<br>
+                    <strong>Assistant:</strong> "Sunny and 75°F today, perfect for a walk! Stay hydrated! ☀️"
+                </div>
+                <div class="example">
+                    <strong>You:</strong> "Recipe for soup?"<br>
+                    <strong>Assistant:</strong> "Easy chicken soup: Boil chicken, add carrots, celery, noodles. Season with love! 🍲"
+                </div>
+                <div class="example">
+                    <strong>You:</strong> "Is this email a scam?"<br>
+                    <strong>Assistant:</strong> "Looks suspicious - don't click links. When in doubt, trust your instincts! 🛡️"
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Perfect For:</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>👴👵 Grandparents</h3>
+                    <p>Health questions, recipes, scam detection - simple and caring responses</p>
+                </div>
+                <div class="feature">
+                    <h3>🚛 Rural Workers</h3>
+                    <p>Directions, conversions, weather when apps fail - direct and practical</p>
+                </div>
+                <div class="feature">
+                    <h3>👨‍👩‍👧‍👦 Caregivers</h3>
+                    <p>Gift to elderly parents - you pay, they text worry-free</p>
+                </div>
+                <div class="feature">
+                    <h3>📱 Anyone</h3>
+                    <p>When networks are jammed, SMS still works - get quick answers</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>How It Works</h2>
+            <ol>
+                <li><strong>Text the number</strong> - Save our SMS number in your phone</li>
+                <li><strong>Ask anything</strong> - Weather, recipes, definitions, scam checks, directions</li>
+                <li><strong>Get instant answers</strong> - Friendly AI responds like texting a helpful friend</li>
+                <li><strong>Need more info?</strong> - Reply "MORE" to get the full answer</li>
+            </ol>
+
+            <div style="margin-top: 2rem; padding: 1rem; background: #e7f3ff; border-radius: 6px;">
+                <strong>Commands:</strong><br>
+                • HELP - Get help and examples<br>
+                • MORE - Get full answer for long responses<br>
+                • STOP - End service anytime
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Why SMS AI Assistant?</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>✅ Universal Access</h3>
+                    <p>Works on any phone - even flip phones. No apps to download or accounts to create.</p>
+                </div>
+                <div class="feature">
+                    <h3>🔒 Privacy First</h3>
+                    <p>We don't store your messages or personal info. Just helpful answers when you need them.</p>
+                </div>
+                <div class="feature">
+                    <h3>🌐 Always Available</h3>
+                    <p>SMS works when data fails. Get help in rural areas or crowded events.</p>
+                </div>
+                <div class="feature">
+                    <h3>👥 Family Friendly</h3>
+                    <p>Adult children can sponsor service for elderly parents. Peace of mind for everyone.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta">
+            <h2>Coming Soon</h2>
+            <p>We're building something special for people who value simplicity and accessibility.</p>
+            <p>SMS AI assistance for everyone - especially those forgotten by big tech.</p>
+
+            <div style="margin-top: 2rem;">
+                <a href="#" class="btn">Join Waitlist (Soon)</a>
+                <a href="/api/health" class="btn btn-secondary">System Status</a>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 SMS AI Assistant - Making AI accessible for everyone</p>
+            <p>"Peace of mind for you. Independence for them."</p>
+        </footer>
+    </div>
+</body>
+</html>
