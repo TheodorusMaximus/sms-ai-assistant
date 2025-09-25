@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS AI Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #333;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.active { background: #00ff00; }
+        .status-dot.warning { background: #ffaa00; }
+        .status-dot.error { background: #ff0000; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .emergency-controls {
+            background: #1a0000;
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .emergency-controls h2 {
+            color: #ff6666;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .emergency-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-danger {
+            background: #cc0000;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff0000;
+            transform: scale(1.05);
+        }
+
+        .btn-warning {
+            background: #ff8800;
+            color: white;
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0088ff;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .metric-change {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .metric-change.positive { color: #00ff00; }
+        .metric-change.negative { color: #ff0000; }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .panel h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #fff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .message-feed {
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+        }
+
+        .message-item {
+            padding: 8px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-item:hover {
+            background: #222;
+        }
+
+        .message-time {
+            color: #666;
+            width: 60px;
+            flex-shrink: 0;
+        }
+
+        .message-phone {
+            color: #0088ff;
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        .message-text {
+            color: #e0e0e0;
+            flex-grow: 1;
+        }
+
+        .cost-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .cost-item {
+            padding: 10px;
+            background: #0a0a0a;
+            border-radius: 6px;
+        }
+
+        .cost-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .cost-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00ff00;
+        }
+
+        .chart-container {
+            height: 200px;
+            background: #0a0a0a;
+            border-radius: 6px;
+            display: flex;
+            align-items: flex-end;
+            padding: 10px;
+            gap: 2px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: #0066cc;
+            border-radius: 2px 2px 0 0;
+            min-height: 5px;
+            transition: all 0.3s;
+        }
+
+        .chart-bar:hover {
+            background: #0088ff;
+        }
+
+        .controls-section {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .control-label {
+            width: 150px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        input[type="number"], input[type="text"], select {
+            padding: 8px 12px;
+            background: #0a0a0a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 14px;
+            width: 200px;
+        }
+
+        .switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #444;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background: #00cc00;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .auth-box {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            width: 400px;
+        }
+
+        .auth-box h2 {
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #0a0a0a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Overlay -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-box">
+            <h2>Admin Authentication</h2>
+            <input type="password" id="adminPassword" class="auth-input" placeholder="Enter admin password" autocomplete="off">
+            <button class="btn-primary" style="width: 100%;" onclick="authenticate()">Login</button>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="dashboard hidden">
+        <header>
+            <h1>SMS AI Control Center</h1>
+            <div class="status-indicator">
+                <span>System Status:</span>
+                <div class="status-dot active"></div>
+                <span id="systemStatus">Operational</span>
+            </div>
+        </header>
+
+        <!-- Emergency Controls -->
+        <div class="emergency-controls">
+            <h2>🚨 EMERGENCY CONTROLS</h2>
+            <div class="emergency-buttons">
+                <button class="btn-danger" onclick="killSwitch()">KILL SWITCH - STOP ALL AI</button>
+                <button class="btn-warning" onclick="pauseService()">Pause Service (5 min)</button>
+                <button class="btn-warning" onclick="enableFallback()">Enable Fallback Mode</button>
+                <button class="btn-warning" onclick="clearCache()">Clear Response Cache</button>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Active Users (24h)</div>
+                <div class="metric-value" id="activeUsers">0</div>
+                <div class="metric-change positive">+0%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Messages Today</div>
+                <div class="metric-value" id="messagestoday">0</div>
+                <div class="metric-change positive">+0%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Cost Today</div>
+                <div class="metric-value" id="costToday">$0.00</div>
+                <div class="metric-change negative">+0%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Avg Response Time</div>
+                <div class="metric-value" id="avgResponse">0ms</div>
+                <div class="metric-change positive">-0%</div>
+            </div>
+        </div>
+
+        <!-- System Controls -->
+        <div class="controls-section">
+            <h3>System Configuration</h3>
+            <div class="control-row">
+                <span class="control-label">Rate Limit (msg/min)</span>
+                <input type="number" id="rateLimit" value="10" min="1" max="100">
+                <button class="btn-primary" onclick="updateRateLimit()">Update</button>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Content Moderation</span>
+                <label class="switch">
+                    <input type="checkbox" id="moderation" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Response Model</span>
+                <select id="aiModel">
+                    <option value="gpt-4o-mini">GPT-4o-mini (Current)</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5-turbo</option>
+                    <option value="claude-instant">Claude Instant</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Max Tokens</span>
+                <input type="number" id="maxTokens" value="150" min="50" max="500">
+            </div>
+        </div>
+
+        <!-- Main Panels -->
+        <div class="main-grid">
+            <!-- Live Message Feed -->
+            <div class="panel">
+                <h3>Live Message Feed</h3>
+                <div class="message-feed" id="messageFeed">
+                    <!-- Messages will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Cost Breakdown -->
+            <div class="panel">
+                <h3>Cost Analysis</h3>
+                <div class="cost-display">
+                    <div class="cost-item">
+                        <div class="cost-label">OpenAI API</div>
+                        <div class="cost-value" id="openaiCost">$0.00</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-label">Twilio SMS</div>
+                        <div class="cost-value" id="twilioCost">$0.00</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-label">Burn Rate</div>
+                        <div class="cost-value" id="burnRate">$0/hr</div>
+                    </div>
+                    <div class="cost-item">
+                        <div class="cost-label">Monthly Projection</div>
+                        <div class="cost-value" id="monthlyProjection">$0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Chart -->
+        <div class="panel">
+            <h3>Hourly Message Volume</h3>
+            <div class="chart-container" id="volumeChart">
+                <!-- Chart bars will be generated -->
+            </div>
+        </div>
+
+        <!-- User Management -->
+        <div class="panel">
+            <h3>User Management</h3>
+            <div class="control-row">
+                <input type="text" id="blockNumber" placeholder="+1234567890" style="width: 300px;">
+                <button class="btn-danger" onclick="blockNumber()">Block Number</button>
+            </div>
+            <div class="control-row">
+                <input type="text" id="searchUser" placeholder="Search messages by phone" style="width: 300px;">
+                <button class="btn-primary" onclick="searchMessages()">Search</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Admin authentication
+        const ADMIN_PASSWORD_HASH = 'smsadmin2025'; // In production, use proper auth
+
+        function authenticate() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === ADMIN_PASSWORD_HASH) {
+                document.getElementById('authOverlay').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                startDashboard();
+            } else {
+                alert('Invalid password');
+            }
+        }
+
+        // Handle enter key for password
+        document.getElementById('adminPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') authenticate();
+        });
+
+        // Emergency functions
+        function killSwitch() {
+            if (confirm('EMERGENCY: Stop all AI responses? This will affect all users immediately.')) {
+                fetch('/api/admin/killswitch', { method: 'POST' })
+                    .then(() => {
+                        alert('Kill switch activated - All AI responses stopped');
+                        document.getElementById('systemStatus').textContent = 'STOPPED';
+                        document.querySelector('.status-dot').className = 'status-dot error';
+                    });
+            }
+        }
+
+        function pauseService() {
+            if (confirm('Pause service for 5 minutes?')) {
+                fetch('/api/admin/pause', { method: 'POST' })
+                    .then(() => alert('Service paused for 5 minutes'));
+            }
+        }
+
+        function enableFallback() {
+            fetch('/api/admin/fallback', { method: 'POST' })
+                .then(() => alert('Fallback mode enabled'));
+        }
+
+        function clearCache() {
+            fetch('/api/admin/cache/clear', { method: 'POST' })
+                .then(() => alert('Response cache cleared'));
+        }
+
+        function updateRateLimit() {
+            const limit = document.getElementById('rateLimit').value;
+            fetch('/api/admin/ratelimit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ limit })
+            }).then(() => alert('Rate limit updated'));
+        }
+
+        function blockNumber() {
+            const number = document.getElementById('blockNumber').value;
+            if (number && confirm(`Block ${number}?`)) {
+                fetch('/api/admin/block', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ number })
+                }).then(() => {
+                    alert(`${number} blocked`);
+                    document.getElementById('blockNumber').value = '';
+                });
+            }
+        }
+
+        function searchMessages() {
+            const query = document.getElementById('searchUser').value;
+            // Implement search logic
+        }
+
+        // Dashboard initialization
+        function startDashboard() {
+            updateMetrics();
+            updateMessageFeed();
+            generateVolumeChart();
+
+            // Refresh data every 5 seconds
+            setInterval(updateMetrics, 5000);
+            setInterval(updateMessageFeed, 3000);
+        }
+
+        function updateMetrics() {
+            // Simulated data - replace with real API calls
+            const metrics = {
+                activeUsers: Math.floor(Math.random() * 100) + 50,
+                messages: Math.floor(Math.random() * 1000) + 500,
+                cost: (Math.random() * 50 + 20).toFixed(2),
+                responseTime: Math.floor(Math.random() * 2000) + 500
+            };
+
+            document.getElementById('activeUsers').textContent = metrics.activeUsers;
+            document.getElementById('messagestoday').textContent = metrics.messages;
+            document.getElementById('costToday').textContent = `$${metrics.cost}`;
+            document.getElementById('avgResponse').textContent = `${metrics.responseTime}ms`;
+
+            // Update cost breakdown
+            const openaiCost = (metrics.cost * 0.3).toFixed(2);
+            const twilioCost = (metrics.cost * 0.7).toFixed(2);
+            document.getElementById('openaiCost').textContent = `$${openaiCost}`;
+            document.getElementById('twilioCost').textContent = `$${twilioCost}`;
+            document.getElementById('burnRate').textContent = `$${(metrics.cost / 24).toFixed(2)}/hr`;
+            document.getElementById('monthlyProjection').textContent = `$${(metrics.cost * 30).toFixed(0)}`;
+        }
+
+        function updateMessageFeed() {
+            const feed = document.getElementById('messageFeed');
+            const messages = [
+                { time: '12:45', phone: '+1555****234', text: 'What is the weather today?' },
+                { time: '12:44', phone: '+1555****567', text: 'Recipe for chicken soup' },
+                { time: '12:43', phone: '+1555****890', text: 'Is this email a scam?' },
+                { time: '12:42', phone: '+1555****123', text: 'HELP' },
+                { time: '12:41', phone: '+1555****456', text: 'Convert 10 miles to km' }
+            ];
+
+            feed.innerHTML = messages.map(msg => `
+                <div class="message-item">
+                    <span class="message-time">${msg.time}</span>
+                    <span class="message-phone">${msg.phone}</span>
+                    <span class="message-text">${msg.text}</span>
+                </div>
+            `).join('');
+        }
+
+        function generateVolumeChart() {
+            const chart = document.getElementById('volumeChart');
+            const hours = 24;
+            const bars = [];
+
+            for (let i = 0; i < hours; i++) {
+                const height = Math.random() * 80 + 20;
+                bars.push(`<div class="chart-bar" style="height: ${height}%"></div>`);
+            }
+
+            chart.innerHTML = bars.join('');
+        }
+    </script>
+</body>
+</html>

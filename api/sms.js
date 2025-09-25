@@ -1,6 +1,7 @@
 const twilio = require('twilio');
 const { generateResponse, getMoreResponse, moderateContent, getInappropriateContentResponse } = require('../lib/ai');
 const { hashPhoneNumber, parseCommand, getHelpMessage, checkRateLimit, logInteraction, addComplianceMessage } = require('../lib/utils');
+const adminConfig = require('./admin');
 
 /**
  * Twilio SMS webhook handler
@@ -20,6 +21,28 @@ module.exports = async function handler(req, res) {
 
     if (!Body || !From) {
       return res.status(400).json({ error: 'Missing required parameters' });
+    }
+
+    // Check admin kill switch
+    if (adminConfig.isKillSwitchActive && adminConfig.isKillSwitchActive()) {
+      const twiml = new twilio.twiml.MessagingResponse();
+      twiml.message('Service temporarily unavailable. Please try again later.');
+      res.setHeader('Content-Type', 'text/xml');
+      return res.status(503).send(twiml.toString());
+    }
+
+    // Check if service is paused
+    if (adminConfig.isPaused && adminConfig.isPaused()) {
+      const twiml = new twilio.twiml.MessagingResponse();
+      twiml.message('Service is temporarily paused for maintenance. Please try again in a few minutes.');
+      res.setHeader('Content-Type', 'text/xml');
+      return res.status(503).send(twiml.toString());
+    }
+
+    // Check if number is blocked
+    if (adminConfig.isBlocked && adminConfig.isBlocked(From)) {
+      // Silently reject blocked numbers
+      return res.status(200).send('');
     }
 
     // Hash phone number for privacy
@@ -63,8 +86,27 @@ module.exports = async function handler(req, res) {
     const twiml = new twilio.twiml.MessagingResponse();
     twiml.message(responseText);
 
-    // Log successful interaction
+    // Log successful interaction and track costs
     console.log(`SMS processed for user ${hashedPhone} in ${Date.now() - startTime}ms`);
+
+    // Track metrics (estimate costs)
+    try {
+      fetch('/api/admin/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: From,
+          message: Body.substring(0, 50),
+          type: isCommand ? 'command' : 'query',
+          cost: {
+            openai: 0.002, // Estimated cost per query
+            twilio: 0.015  // Inbound + outbound SMS cost
+          }
+        })
+      }).catch(err => console.error('Metrics logging failed:', err));
+    } catch (e) {
+      // Don't let metrics failure affect service
+    }
 
     res.setHeader('Content-Type', 'text/xml');
     return res.status(200).send(twiml.toString());
