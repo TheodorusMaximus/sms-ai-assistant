@@ -1,7 +1,7 @@
 const twilio = require('twilio');
 const { generateResponse, getMoreResponse, moderateContent, getInappropriateContentResponse } = require('../lib/ai');
 const { hashPhoneNumber, parseCommand, getHelpMessage, checkRateLimit, logInteraction, addComplianceMessage } = require('../lib/utils');
-const adminConfig = require('./admin');
+const { getOrCreateUser, recordMessage, isPhoneBlocked, getSystemConfig } = require('../lib/supabase');
 
 /**
  * Twilio SMS webhook handler
@@ -23,8 +23,14 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
+    // Hash phone number for privacy
+    const hashedPhone = hashPhoneNumber(From);
+
+    // Get system configuration
+    const config = await getSystemConfig();
+
     // Check admin kill switch
-    if (adminConfig.isKillSwitchActive && adminConfig.isKillSwitchActive()) {
+    if (config.kill_switch === true) {
       const twiml = new twilio.twiml.MessagingResponse();
       twiml.message('Service temporarily unavailable. Please try again later.');
       res.setHeader('Content-Type', 'text/xml');
@@ -32,7 +38,8 @@ module.exports = async function handler(req, res) {
     }
 
     // Check if service is paused
-    if (adminConfig.isPaused && adminConfig.isPaused()) {
+    const pausedUntil = config.paused_until;
+    if (pausedUntil && new Date(pausedUntil) > new Date()) {
       const twiml = new twilio.twiml.MessagingResponse();
       twiml.message('Service is temporarily paused for maintenance. Please try again in a few minutes.');
       res.setHeader('Content-Type', 'text/xml');
@@ -40,13 +47,13 @@ module.exports = async function handler(req, res) {
     }
 
     // Check if number is blocked
-    if (adminConfig.isBlocked && adminConfig.isBlocked(From)) {
+    if (await isPhoneBlocked(hashedPhone)) {
       // Silently reject blocked numbers
       return res.status(200).send('');
     }
 
-    // Hash phone number for privacy
-    const hashedPhone = hashPhoneNumber(From);
+    // Get or create user in database
+    const userId = await getOrCreateUser(hashedPhone);
 
     // Check rate limiting
     if (!checkRateLimit(hashedPhone)) {
@@ -86,27 +93,32 @@ module.exports = async function handler(req, res) {
     const twiml = new twilio.twiml.MessagingResponse();
     twiml.message(responseText);
 
-    // Log successful interaction and track costs
-    console.log(`SMS processed for user ${hashedPhone} in ${Date.now() - startTime}ms`);
+    // Record message in database
+    const responseTime = Date.now() - startTime;
+    console.log(`SMS processed for user ${hashedPhone} in ${responseTime}ms`);
 
-    // Track metrics (estimate costs)
-    try {
-      fetch('/api/admin/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: From,
-          message: Body.substring(0, 50),
-          type: isCommand ? 'command' : 'query',
-          cost: {
-            openai: 0.002, // Estimated cost per query
-            twilio: 0.015  // Inbound + outbound SMS cost
-          }
-        })
-      }).catch(err => console.error('Metrics logging failed:', err));
-    } catch (e) {
-      // Don't let metrics failure affect service
-    }
+    // Record inbound message
+    await recordMessage({
+      userId,
+      direction: 'inbound',
+      content: Body,
+      contentHash: require('crypto').createHash('sha256').update(Body).digest('hex'),
+      responseTimeMs: responseTime,
+      costCents: 1.5, // Estimated inbound SMS cost
+      twilioSid: req.body.MessageSid
+    });
+
+    // Record outbound message
+    await recordMessage({
+      userId,
+      direction: 'outbound',
+      content: responseText,
+      personaUsed: isCommand ? 'command' : 'default',
+      tokensUsed: responseText.length / 4, // Rough estimate
+      responseTimeMs: responseTime,
+      costCents: 1.7, // Estimated outbound SMS cost + AI cost
+      aiModel: 'gpt-4o-mini'
+    });
 
     res.setHeader('Content-Type', 'text/xml');
     return res.status(200).send(twiml.toString());

@@ -1,27 +1,11 @@
 const crypto = require('crypto');
-
-// In-memory store for admin settings and metrics (use Redis in production)
-let systemConfig = {
-    killSwitch: false,
-    fallbackMode: false,
-    rateLimit: 10,
-    moderationEnabled: true,
-    aiModel: 'gpt-4o-mini',
-    maxTokens: 150,
-    blockedNumbers: new Set(),
-    pausedUntil: null
-};
-
-let metrics = {
-    messagestoday: 0,
-    activeUsers: new Set(),
-    totalCost: 0,
-    openAICost: 0,
-    twilioCost: 0,
-    messageLog: [],
-    hourlyVolume: new Array(24).fill(0),
-    errors: []
-};
+const {
+    getDashboardMetrics,
+    getSystemConfig,
+    updateSystemConfig,
+    logAdminAction,
+    supabaseAdmin
+} = require('../lib/supabase');
 
 // Admin authentication middleware
 function requireAdmin(req) {
@@ -56,11 +40,16 @@ module.exports = async function handler(req, res) {
     try {
         // Route handlers
         if (path === '/killswitch' && req.method === 'POST') {
-            systemConfig.killSwitch = !systemConfig.killSwitch;
-            console.log(`EMERGENCY: Kill switch ${systemConfig.killSwitch ? 'ACTIVATED' : 'DEACTIVATED'}`);
+            const currentKillSwitch = await getSystemConfig('kill_switch');
+            const newKillSwitch = !currentKillSwitch;
+
+            await updateSystemConfig('kill_switch', newKillSwitch);
+            await logAdminAction(1, 'KILL_SWITCH_TOGGLE', 'system', { newValue: newKillSwitch });
+
+            console.log(`EMERGENCY: Kill switch ${newKillSwitch ? 'ACTIVATED' : 'DEACTIVATED'}`);
             return res.status(200).json({
-                status: systemConfig.killSwitch ? 'stopped' : 'operational',
-                message: `Kill switch ${systemConfig.killSwitch ? 'activated' : 'deactivated'}`
+                status: newKillSwitch ? 'stopped' : 'operational',
+                message: `Kill switch ${newKillSwitch ? 'activated' : 'deactivated'}`
             });
         }
 
@@ -119,25 +108,33 @@ module.exports = async function handler(req, res) {
         }
 
         if (path === '/metrics' && req.method === 'GET') {
-            // Calculate real-time metrics
-            const now = new Date();
-            const hour = now.getHours();
+            const dashboardMetrics = await getDashboardMetrics();
+            const config = await getSystemConfig();
+
+            // Get recent messages
+            const { data: recentMessages } = await supabaseAdmin
+                .from('messages')
+                .select('id, direction, content, created_at, user_id')
+                .order('created_at', { ascending: false })
+                .limit(20);
+
+            // Format recent messages for display
+            const formattedMessages = recentMessages?.map(msg => ({
+                time: new Date(msg.created_at).toLocaleTimeString(),
+                phone: `user_${msg.user_id}`,
+                text: msg.content ? msg.content.substring(0, 50) + '...' : '[no content]',
+                direction: msg.direction
+            })) || [];
 
             return res.status(200).json({
-                activeUsers: metrics.activeUsers.size,
-                messagesToday: metrics.messagestoday,
-                costToday: metrics.totalCost.toFixed(2),
-                openAICost: metrics.openAICost.toFixed(2),
-                twilioCost: metrics.twilioCost.toFixed(2),
-                burnRate: (metrics.totalCost / (hour + 1)).toFixed(2),
-                monthlyProjection: (metrics.totalCost * 30).toFixed(2),
-                avgResponseTime: Math.floor(Math.random() * 2000) + 500, // Placeholder
-                hourlyVolume: metrics.hourlyVolume,
-                recentMessages: metrics.messageLog.slice(-20),
-                systemStatus: systemConfig.killSwitch ? 'stopped' :
-                             systemConfig.pausedUntil > Date.now() ? 'paused' :
-                             systemConfig.fallbackMode ? 'fallback' : 'operational',
-                errors: metrics.errors.slice(-10)
+                ...dashboardMetrics,
+                burnRate: (parseFloat(dashboardMetrics.costToday) / 24).toFixed(2),
+                monthlyProjection: (parseFloat(dashboardMetrics.costToday) * 30).toFixed(2),
+                recentMessages: formattedMessages,
+                systemStatus: config.kill_switch ? 'stopped' :
+                             config.paused_until && new Date(config.paused_until) > new Date() ? 'paused' :
+                             config.fallback_mode ? 'fallback' : 'operational',
+                config
             });
         }
 
